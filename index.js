@@ -22,11 +22,10 @@ var tmpDynamoLocalDirDest = os.tmpdir() + 'dynamodb-local',
        * @returns {Promise.<ChildProcess>}
        */
       launch: function (port, dbPath, additionalArgs) {
-        if (!dbPath) {
-          dbPath = '-inMemory';
-        }
-        else {
-          dbPath = '-dbPath ' + dbPath;
+        if (runningProcesses[port]) {
+          return new Promise(function (resolve, reject) {
+            resolve(runningProcesses[port]);
+          });
         }
 
         if (!additionalArgs) {
@@ -36,15 +35,27 @@ var tmpDynamoLocalDirDest = os.tmpdir() + 'dynamodb-local',
           additionalArgs = [additionalArgs];
         }
 
+        if (!dbPath) {
+          additionalArgs.push('-inMemory');
+        }
+        else {
+          additionalArgs.push('-dbPath', dbPath);
+        }
+
         return installDynamoDbLocal()
             .then(function () {
               let args = [
-                '-Djava.library.path=./DynamoDBLocal_lib -jar ' + JARNAME,
-                '--port', port
+                '-Djava.library.path=./DynamoDBLocal_lib',
+                '-jar',
+                JARNAME,
+                '-port',
+                port
               ];
-              args.concat(additionalArgs);
+              args = args.concat(additionalArgs);
 
-              let child = spawn('java', args, {cwd: 'test', env: process.env});
+              let child = spawn('java', args, {cwd: tmpDynamoLocalDirDest, env: process.env});
+
+              if (!child.pid) throw new Error("Unable to launch DyanmoDBLocal process");
 
               runningProcesses[port] = child;
 
@@ -53,7 +64,8 @@ var tmpDynamoLocalDirDest = os.tmpdir() + 'dynamodb-local',
       },
       stop: function (port) {
         if (runningProcesses[port]) {
-          runningProcesses[port].kill();
+          runningProcesses[port].kill('SIGKILL');
+          delete runningProcesses[port];
         }
       },
       relaunch: function (port, db) {
@@ -68,15 +80,14 @@ function installDynamoDbLocal() {
   console.log("Checking for ", tmpDynamoLocalDirDest);
   return new Promise(function (resolve, reject) {
     try {
-      let jarPath = tmpDynamoLocalDirDest + '/' + JARNAME,
-          stats = fs.lstatSync(tmpDynamoLocalDirDest);
-
-      if (stats.isDirectory() && fs.existsSync(tmpDynamoLocalDirDest + '/' + jarPath)) {
+      if (fs.existsSync(tmpDynamoLocalDirDest + '/' + JARNAME)) {
         resolve();
+        return;
       }
+    } catch (e) {
     }
-    catch (e) {
-    }
+
+    fs.mkdirSync(tmpDynamoLocalDirDest);
 
     http
         .get('http://dynamodb-local.s3-website-us-west-2.amazonaws.com/dynamodb_local_latest.tar.gz', function (response) {
@@ -91,20 +102,8 @@ function installDynamoDbLocal() {
                 }
                 redirectResponse
                     .pipe(zlib.Unzip())
-                    .pipe(tar.Parse())
-                    .on('entry', function (entry) {
-                      var fullpath = path.join(tmpDynamoLocalDirDest, entry.path);
-                      if ('Directory' == entry.type) {
-                        fs.mkdirSync(fullpath);
-                      }
-                      else {
-                        mkdirp(path.dirname(fullpath), function (err) {
-                          if (err) reject(err);
-                          entry.pipe(fs.createWriteStream(fullpath));
-                        });
-                      }
-                    })
-                    .on('finish', function () {
+                    .pipe(tar.Extract({path: tmpDynamoLocalDirDest}))
+                    .on('end', function () {
                       resolve();
                     })
                     .on('error', function (err) {
