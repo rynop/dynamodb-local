@@ -11,7 +11,7 @@ Then in node:
 ```javascript
 var DynamoDbLocal = require('dynamodb-local');
 
-DynamoDbLocal.launch(8000);
+DynamoDbLocal.launch(dynamoLocalPort, null, ['-sharedDb'])
 //Do your tests
 DynamoDbLocal.stop(8000);
 ```
