@@ -59,6 +59,8 @@ var tmpDynamoLocalDirDest = os.tmpdir() + 'dynamodb-local',
 
               runningProcesses[port] = child;
 
+              console.log("DynamoDbLocal(" + child.pid + ") started on port ", port);
+
               return child;
             });
       },
