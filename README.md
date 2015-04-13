@@ -4,6 +4,8 @@ A wrapper for AWS DynamoDB Local, intended for use in testcases.  Will automatic
 
 # Usage
 
+Note: this module was developed using a few ES6 features (const,let,native Promise).  It is highly recomended to use io.js because of its [ES6 features](https://iojs.org/en/es6.html)
+
 `npm install dynamodb-local --save`
 
 Then in node:
