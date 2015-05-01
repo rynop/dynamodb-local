@@ -57,9 +57,20 @@ var tmpDynamoLocalDirDest = os.tmpdir() + 'dynamodb-local',
 
               if (!child.pid) throw new Error("Unable to launch DyanmoDBLocal process");
 
+              child
+                  .on('error', function (err) {
+                    console.log("local DynamoDB start error", err);
+                    throw new Error("Local DynamoDB failed to start. ");
+                  })
+                  .on('close', function (code) {
+                    if (code !== 0) {
+                      console.log('Local DynamoDB failed to start with code', code);
+                    }
+                  });
+
               runningProcesses[port] = child;
 
-              console.log("DynamoDbLocal(" + child.pid + ") started on port ", port);
+              console.log("DynamoDbLocal(" + child.pid + ") started on port", port, "via java", args.join(' '), "from CWD", tmpDynamoLocalDirDest);
 
               return child;
             });
@@ -88,6 +99,8 @@ function installDynamoDbLocal() {
       }
     } catch (e) {
     }
+
+    console.log("DyanmoDb Local not installed. Installing...");
 
     fs.mkdirSync(tmpDynamoLocalDirDest);
 
