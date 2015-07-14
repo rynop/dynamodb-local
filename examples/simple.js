@@ -1,6 +1,6 @@
 'use strict';
 
-var DynamoDbLocal = require('./index');
+var DynamoDbLocal = require('../index');
 
 DynamoDbLocal.launch(8000)
     .then(function (ChildProcess) {
