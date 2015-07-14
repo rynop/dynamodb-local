@@ -9,7 +9,7 @@ var os = require('os'),
     path = require('path'),
     mkdirp = require('mkdirp');
 
-const JARNAME = 'DynamoDBLocal.jar';
+var JARNAME = 'DynamoDBLocal.jar';
 
 var tmpDynamoLocalDirDest = os.tmpdir() + 'dynamodb-local',
     runningProcesses = {},
@@ -44,7 +44,7 @@ var tmpDynamoLocalDirDest = os.tmpdir() + 'dynamodb-local',
 
         return installDynamoDbLocal()
             .then(function () {
-              let args = [
+              var args = [
                 '-Djava.library.path=./DynamoDBLocal_lib',
                 '-jar',
                 JARNAME,
@@ -53,7 +53,7 @@ var tmpDynamoLocalDirDest = os.tmpdir() + 'dynamodb-local',
               ];
               args = args.concat(additionalArgs);
 
-              let child = spawn('java', args, {cwd: tmpDynamoLocalDirDest, env: process.env});
+              var child = spawn('java', args, {cwd: tmpDynamoLocalDirDest, env: process.env, stdio:['pipe', 'pipe', process.stderr]});
 
               if (!child.pid) throw new Error("Unable to launch DyanmoDBLocal process");
 
@@ -63,7 +63,7 @@ var tmpDynamoLocalDirDest = os.tmpdir() + 'dynamodb-local',
                     throw new Error("Local DynamoDB failed to start. ");
                   })
                   .on('close', function (code) {
-                    if (code !== 0) {
+                    if (code !== null && code !== 0) {
                       console.log('Local DynamoDB failed to start with code', code);
                     }
                   });
@@ -102,7 +102,8 @@ function installDynamoDbLocal() {
 
     console.log("DyanmoDb Local not installed. Installing...");
 
-    fs.mkdirSync(tmpDynamoLocalDirDest);
+    if (!fs.existsSync(tmpDynamoLocalDirDest))
+        fs.mkdirSync(tmpDynamoLocalDirDest);
 
     http
         .get('http://dynamodb-local.s3-website-us-west-2.amazonaws.com/dynamodb_local_latest.tar.gz', function (response) {
