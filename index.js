@@ -1,20 +1,20 @@
 "use strict";
 
-var os     = require('os'),
-    spawn  = require('child_process').spawn,
-    fs     = require('fs'),
-    http   = require('http'),
-    tar    = require('tar'),
-    zlib   = require('zlib'),
-    path   = require('path'),
+var os = require('os'),
+    spawn = require('child_process').spawn,
+    fs = require('fs'),
+    http = require('http'),
+    tar = require('tar'),
+    zlib = require('zlib'),
+    path = require('path'),
     mkdirp = require('mkdirp'),
-    Q      = require('q');
+    Q = require('q');
 
 var JARNAME = 'DynamoDBLocal.jar';
 
-var tmpDynamoLocalDirDest = os.tmpdir() + 'dynamodb-local',
-    runningProcesses      = {},
-    DynamoDbLocal         = {
+var tmpDynamoLocalDirDest = path.join(os.tmpdir(), 'dynamodb-local'),
+    runningProcesses = {},
+    DynamoDbLocal = {
         /**
          *
          * @param port
@@ -52,7 +52,7 @@ var tmpDynamoLocalDirDest = os.tmpdir() + 'dynamodb-local',
                         '-port',
                         port
                     ];
-                    args     = args.concat(additionalArgs);
+                    args = args.concat(additionalArgs);
 
                     var child = spawn('java', args, {
                         cwd: tmpDynamoLocalDirDest,
@@ -99,7 +99,7 @@ function installDynamoDbLocal() {
     var deferred = Q.defer();
 
     try {
-        if (fs.existsSync(tmpDynamoLocalDirDest + '/' + JARNAME)) {
+        if (fs.existsSync(path.join(tmpDynamoLocalDirDest, JARNAME))) {
             return Q.fcall(function () {
                 return true;
             });
