@@ -60,7 +60,7 @@ var tmpDynamoLocalDirDest = path.join(os.tmpdir(), 'dynamodb-local'),
                         stdio: ['pipe', 'pipe', process.stderr]
                     });
 
-                    if (!child.pid) throw new Error("Unable to launch DyanmoDBLocal process");
+                    if (!child.pid) throw new Error("Unable to launch DynamoDBLocal process");
 
                     child
                         .on('error', function (err) {
@@ -107,7 +107,7 @@ function installDynamoDbLocal() {
     } catch (e) {
     }
 
-    console.log("DyanmoDb Local not installed. Installing...");
+    console.log("DynamoDb Local not installed. Installing...");
 
     if (!fs.existsSync(tmpDynamoLocalDirDest))
         fs.mkdirSync(tmpDynamoLocalDirDest);
@@ -115,13 +115,13 @@ function installDynamoDbLocal() {
     http
         .get('http://dynamodb-local.s3-website-us-west-2.amazonaws.com/dynamodb_local_latest.tar.gz', function (response) {
             if (302 != response.statusCode) {
-                deferred.reject(new Error("Error getting DyanmoDb local latest tar.gz location: " + response.statusCode));
+                deferred.reject(new Error("Error getting DynamoDb local latest tar.gz location: " + response.statusCode));
             }
 
             http
                 .get(response.headers['location'], function (redirectResponse) {
                     if (200 != redirectResponse.statusCode) {
-                        deferred.reject(new Error("Error getting DyanmoDb local latest tar.gz location " + response.headers['location'] + ": " + redirectResponse.statusCode));
+                        deferred.reject(new Error("Error getting DynamoDb local latest tar.gz location " + response.headers['location'] + ": " + redirectResponse.statusCode));
                     }
                     redirectResponse
                         .pipe(zlib.Unzip())
