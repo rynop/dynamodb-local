@@ -32,7 +32,7 @@ var tmpDynamoLocalDirDest = path.join(os.tmpdir(), 'dynamodb-local'),
             if (!additionalArgs) {
                 additionalArgs = [];
             }
-            else if (Array.isArray(additionalArgs)) {
+            else if (!Array.isArray(additionalArgs)) {
                 additionalArgs = [additionalArgs];
             }
 
