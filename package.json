@@ -4,8 +4,8 @@
   "version": "0.0.12",
   "repository": "doapp-ryanp/dynamodb-local",
   "author": {
-    "name": "Ryan Pendergast (DoApp, Inc)",
-    "email": "ryanp@doapps.com"
+    "name": "Ryan Pendergast",
+    "email": "ryan.pendergast@gmail.com"
   },
   "tags": [
     "aws",
