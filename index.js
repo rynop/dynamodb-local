@@ -112,34 +112,23 @@ function installDynamoDbLocal() {
     if (!fs.existsSync(tmpDynamoLocalDirDest))
         fs.mkdirSync(tmpDynamoLocalDirDest);
 
-    http
-        .get('http://dynamodb-local.s3-website-us-west-2.amazonaws.com/dynamodb_local_latest.tar.gz', function (response) {
-            if (302 != response.statusCode) {
-                deferred.reject(new Error("Error getting DynamoDb local latest tar.gz location: " + response.statusCode));
-            }
-
-            http
-                .get(response.headers['location'], function (redirectResponse) {
-                    if (200 != redirectResponse.statusCode) {
-                        deferred.reject(new Error("Error getting DynamoDb local latest tar.gz location " + response.headers['location'] + ": " + redirectResponse.statusCode));
-                    }
-                    redirectResponse
-                        .pipe(zlib.Unzip())
-                        .pipe(tar.Extract({path: tmpDynamoLocalDirDest}))
-                        .on('end', function () {
-                            deferred.resolve();
-                        })
-                        .on('error', function (err) {
-                            deferred.reject(err);
-                        });
-                })
-                .on('error', function (e) {
-                    deferred.reject(e);
-                });
+    http.get('http://s3-us-west-2.amazonaws.com/dynamodb-local/dynamodb_local_latest.tar.gz', function (redirectResponse) {
+        if (200 != redirectResponse.statusCode) {
+            deferred.reject(new Error("Error getting DynamoDb local latest tar.gz location " + response.headers['location'] + ": " + redirectResponse.statusCode));
+        }
+        redirectResponse
+        .pipe(zlib.Unzip())
+        .pipe(tar.Extract({path: tmpDynamoLocalDirDest}))
+        .on('end', function () {
+            deferred.resolve();
         })
-        .on('error', function (e) {
-            deferred.reject(e);
+        .on('error', function (err) {
+            deferred.reject(err);
         });
+    })
+    .on('error', function (e) {
+        deferred.reject(e);
+    });
 
     return deferred.promise;
 }
