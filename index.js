@@ -20,9 +20,10 @@ var tmpDynamoLocalDirDest = path.join(os.tmpdir(), 'dynamodb-local'),
          * @param port
          * @param dbPath if omitted will use in memory
          * @param additionalArgs
+         * @param verbose
          * @returns {Promise.<ChildProcess>}
          */
-        launch: function (port, dbPath, additionalArgs) {
+        launch: function (port, dbPath, additionalArgs, verbose) {
             if (runningProcesses[port]) {
                 return Q.fcall(function () {
                     return runningProcesses[port];
@@ -41,6 +42,10 @@ var tmpDynamoLocalDirDest = path.join(os.tmpdir(), 'dynamodb-local'),
             }
             else {
                 additionalArgs.push('-dbPath', dbPath);
+            }
+
+            if (verbose != null) {
+                verbose = true;
             }
 
             return installDynamoDbLocal()
@@ -64,18 +69,18 @@ var tmpDynamoLocalDirDest = path.join(os.tmpdir(), 'dynamodb-local'),
 
                     child
                         .on('error', function (err) {
-                            console.log("local DynamoDB start error", err);
+                            if (verbose) console.log("local DynamoDB start error", err);
                             throw new Error("Local DynamoDB failed to start. ");
                         })
                         .on('close', function (code) {
                             if (code !== null && code !== 0) {
-                                console.log('Local DynamoDB failed to start with code', code);
+                                if (verbose) console.log('Local DynamoDB failed to start with code', code);
                             }
                         });
 
                     runningProcesses[port] = child;
 
-                    console.log("DynamoDbLocal(" + child.pid + ") started on port", port, "via java", args.join(' '), "from CWD", tmpDynamoLocalDirDest);
+                    if (verbose) console.log("DynamoDbLocal(" + child.pid + ") started on port", port, "via java", args.join(' '), "from CWD", tmpDynamoLocalDirDest);
 
                     return child;
                 });
