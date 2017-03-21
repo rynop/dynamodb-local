@@ -1,7 +1,8 @@
 {
   "name": "dynamodb-local",
   "description": "A wrapper for AWS DynamoDB Local, intended for use in testcases",
-  "version": "0.0.14",
+  "version": "0.0.15",
+  "license": "MIT",
   "repository": "doapp-ryanp/dynamodb-local",
   "author": {
     "name": "Ryan Pendergast",
