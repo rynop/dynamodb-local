@@ -3,7 +3,7 @@
 var os = require('os'),
     spawn = require('child_process').spawn,
     fs = require('fs'),
-    http = require('http'),
+    https = require('https'),
     tar = require('tar'),
     zlib = require('zlib'),
     path = require('path'),
@@ -12,8 +12,12 @@ var os = require('os'),
 
 var JARNAME = 'DynamoDBLocal.jar';
 
-var tmpDynamoLocalDirDest = path.join(os.tmpdir(), 'dynamodb-local'),
-    runningProcesses = {},
+var Config = {
+    installPath: path.join(os.tmpdir(), 'dynamodb-local'),
+    downloadUrl: 'https://s3-us-west-2.amazonaws.com/dynamodb-local/dynamodb_local_latest.tar.gz'
+};
+
+var runningProcesses = {},
     DynamoDbLocal = {
         /**
          *
@@ -60,7 +64,7 @@ var tmpDynamoLocalDirDest = path.join(os.tmpdir(), 'dynamodb-local'),
                     args = args.concat(additionalArgs);
 
                     var child = spawn('java', args, {
-                        cwd: tmpDynamoLocalDirDest,
+                        cwd: Config.installPath,
                         env: process.env,
                         stdio: ['pipe', 'pipe', process.stderr]
                     });
@@ -80,7 +84,10 @@ var tmpDynamoLocalDirDest = path.join(os.tmpdir(), 'dynamodb-local'),
 
                     runningProcesses[port] = child;
 
-                    if (verbose) console.log('DynamoDbLocal(' + child.pid + ') started on port', port, 'via java', args.join(' '), 'from CWD', tmpDynamoLocalDirDest);
+                    if (verbose) {
+                        console.log('DynamoDbLocal(', child.pid, ') started on port', port,
+                            'via java', args.join(' '), 'from CWD', Config.installPath);
+                    }
 
                     return child;
                 });
@@ -94,17 +101,25 @@ var tmpDynamoLocalDirDest = path.join(os.tmpdir(), 'dynamodb-local'),
         relaunch: function (port, db) {
             this.stop(port);
             this.launch(port, db);
+        },
+        configureInstaller: function (conf) {
+            if (conf.installPath) {
+                Config.installPath = conf.installPath;
+            }
+            if (conf.downloadUrl) {
+                Config.downloadUrl = conf.downloadUrl;
+            }
         }
     };
 
 module.exports = DynamoDbLocal;
 
 function installDynamoDbLocal() {
-    console.log('Checking for ', tmpDynamoLocalDirDest);
+    console.log('Checking for DynamoDB-Local in ', Config.installPath);
     var deferred = Q.defer();
 
     try {
-        if (fs.existsSync(path.join(tmpDynamoLocalDirDest, JARNAME))) {
+        if (fs.existsSync(path.join(Config.installPath, JARNAME))) {
             return Q.fcall(function () {
                 return true;
             });
@@ -114,26 +129,28 @@ function installDynamoDbLocal() {
 
     console.log('DynamoDb Local not installed. Installing...');
 
-    if (!fs.existsSync(tmpDynamoLocalDirDest))
-        fs.mkdirSync(tmpDynamoLocalDirDest);
+    if (!fs.existsSync(Config.installPath))
+        fs.mkdirSync(Config.installPath);
 
-    http.get('http://s3-us-west-2.amazonaws.com/dynamodb-local/dynamodb_local_latest.tar.gz', function (redirectResponse) {
-        if (200 != redirectResponse.statusCode) {
-            deferred.reject(new Error('Error getting DynamoDb local latest tar.gz location ' + response.headers['location'] + ': ' + redirectResponse.statusCode));
-        }
-        redirectResponse
-        .pipe(zlib.Unzip())
-        .pipe(tar.Extract({path: tmpDynamoLocalDirDest}))
-        .on('end', function () {
-            deferred.resolve();
+    https.get(Config.downloadUrl,
+        function (redirectResponse) {
+            if (200 != redirectResponse.statusCode) {
+                deferred.reject(new Error('Error getting DynamoDb local latest tar.gz location ' +
+                    response.headers['location'] + ': ' + redirectResponse.statusCode));
+            }
+            redirectResponse
+                .pipe(zlib.Unzip())
+                .pipe(tar.Extract({path: Config.installPath}))
+                .on('end', function () {
+                    deferred.resolve();
+                })
+                .on('error', function (err) {
+                    deferred.reject(err);
+                });
         })
-        .on('error', function (err) {
-            deferred.reject(err);
+        .on('error', function (e) {
+            deferred.reject(e);
         });
-    })
-    .on('error', function (e) {
-        deferred.reject(e);
-    });
 
     return deferred.promise;
 }
