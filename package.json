@@ -32,5 +32,6 @@
       "type": "MIT",
       "url": "https://raw.githubusercontent.com/gulpjs/gulp/master/LICENSE"
     }
-  ]
+  ],
+  "types": "./index.d.ts"
 }
