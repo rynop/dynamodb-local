@@ -84,7 +84,7 @@ var runningProcesses = {},
 
                     process.on('exit', function() {
                         child.kill();
-                    })
+                    });
 
                     runningProcesses[port] = child;
 
