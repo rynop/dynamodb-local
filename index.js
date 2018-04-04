@@ -25,9 +25,10 @@ var runningProcesses = {},
          * @param dbPath if omitted will use in memory
          * @param additionalArgs
          * @param verbose
+         * @param detached
          * @returns {Promise.<ChildProcess>}
          */
-        launch: function (port, dbPath, additionalArgs, verbose) {
+        launch: function (port, dbPath, additionalArgs, verbose = false, detached) {
             if (runningProcesses[port]) {
                 return Q.fcall(function () {
                     return runningProcesses[port];
@@ -48,13 +49,10 @@ var runningProcesses = {},
                 additionalArgs.push('-dbPath', dbPath);
             }
 
-            if (verbose != null) {
-                verbose = true;
-            }
-
             return installDynamoDbLocal()
                 .then(function () {
                     var args = [
+                        '-Xrs',
                         '-Djava.library.path=./DynamoDBLocal_lib',
                         '-jar',
                         JARNAME,
@@ -78,13 +76,14 @@ var runningProcesses = {},
                         })
                         .on('close', function (code) {
                             if (code !== null && code !== 0) {
-                                if (verbose) console.log('Local DynamoDB failed to start with code', code);
+                                if (verbose) console.log('Local DynamoDB failed to close with code', code);
                             }
                         });
-
-                    process.on('exit', function() {
-                        child.kill();
-                    });
+                    if (!detached) {
+                      process.on('exit', function() {
+                          child.kill();
+                      });
+                    }
 
                     runningProcesses[port] = child;
 
@@ -100,6 +99,12 @@ var runningProcesses = {},
             if (runningProcesses[port]) {
                 runningProcesses[port].kill('SIGKILL');
                 delete runningProcesses[port];
+            }
+        },
+        stopChild: function (child) {
+            if (child.pid) {
+                console.log('stopped the Child');
+                child.kill();
             }
         },
         relaunch: function (port, db) {
