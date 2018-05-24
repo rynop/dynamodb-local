@@ -142,9 +142,9 @@ function installDynamoDbLocal() {
     if (!fs.existsSync(Config.installPath))
         fs.mkdirSync(Config.installPath);
 
-    if (!fs.existsSync(Config.downloadUrl)) {
+    if (fs.existsSync(Config.downloadUrl)) {
         console.log('Installing from local file:', Config.downloadUrl);
-        filebuf = fs.readFileSync(Config.downloadUrl);
+        filebuf = fs.createReadStream(Config.downloadUrl);
         filebuf
             .pipe(zlib.Unzip())
             .pipe(tar.Extract({path: Config.installPath}))
