@@ -125,6 +125,7 @@ module.exports = DynamoDbLocal;
 
 function installDynamoDbLocal() {
     console.log('Checking for DynamoDB-Local in ', Config.installPath);
+    var filebuf = [];
     var deferred = Q.defer();
 
     try {
@@ -141,25 +142,39 @@ function installDynamoDbLocal() {
     if (!fs.existsSync(Config.installPath))
         fs.mkdirSync(Config.installPath);
 
-    https.get(Config.downloadUrl,
-        function (redirectResponse) {
-            if (200 != redirectResponse.statusCode) {
-                deferred.reject(new Error('Error getting DynamoDb local latest tar.gz location ' +
-                    response.headers['location'] + ': ' + redirectResponse.statusCode));
-            }
-            redirectResponse
-                .pipe(zlib.Unzip())
-                .pipe(tar.Extract({path: Config.installPath}))
-                .on('end', function () {
-                    deferred.resolve();
-                })
-                .on('error', function (err) {
-                    deferred.reject(err);
-                });
-        })
-        .on('error', function (e) {
-            deferred.reject(e);
-        });
-
+    if (!fs.existsSync(Config.downloadUrl)) {
+        console.log('Installing from local file:', Config.downloadUrl);
+        filebuf = fs.readFileSync(Config.downloadUrl);
+        filebuf
+            .pipe(zlib.Unzip())
+            .pipe(tar.Extract({path: Config.installPath}))
+            .on('end', function () {
+                deferred.resolve();
+            })
+            .on('error', function (err) {
+                deferred.reject(err);
+            });
+    }
+    else {
+        https.get(Config.downloadUrl,
+            function (redirectResponse) {
+                if (200 != redirectResponse.statusCode) {
+                    deferred.reject(new Error('Error getting DynamoDb local latest tar.gz location ' +
+                        response.headers['location'] + ': ' + redirectResponse.statusCode));
+                }
+                redirectResponse
+                    .pipe(zlib.Unzip())
+                    .pipe(tar.Extract({path: Config.installPath}))
+                    .on('end', function () {
+                        deferred.resolve();
+                    })
+                    .on('error', function (err) {
+                        deferred.reject(err);
+                    });
+            })
+            .on('error', function (e) {
+                deferred.reject(e);
+            });
+    }
     return deferred.promise;
 }
