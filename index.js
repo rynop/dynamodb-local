@@ -9,6 +9,7 @@ var os = require('os'),
     path = require('path'),
     mkdirp = require('mkdirp'),
     Q = require('q');
+    debug = require('debug')('dynamodb-local')
 
 var JARNAME = 'DynamoDBLocal.jar';
 
@@ -71,12 +72,12 @@ var runningProcesses = {},
 
                     child
                         .on('error', function (err) {
-                            if (verbose) console.log('local DynamoDB start error', err);
+                            if (verbose) debug('local DynamoDB start error', err);
                             throw new Error('Local DynamoDB failed to start. ');
                         })
                         .on('close', function (code) {
                             if (code !== null && code !== 0) {
-                                if (verbose) console.log('Local DynamoDB failed to close with code', code);
+                                if (verbose) debug('Local DynamoDB failed to close with code', code);
                             }
                         });
                     if (!detached) {
@@ -88,7 +89,7 @@ var runningProcesses = {},
                     runningProcesses[port] = child;
 
                     if (verbose) {
-                        console.log('DynamoDbLocal(', child.pid, ') started on port', port,
+                        debug('DynamoDbLocal(', child.pid, ') started on port', port,
                             'via java', args.join(' '), 'from CWD', Config.installPath);
                     }
 
@@ -103,7 +104,7 @@ var runningProcesses = {},
         },
         stopChild: function (child) {
             if (child.pid) {
-                console.log('stopped the Child');
+                debug('stopped the Child');
                 child.kill();
             }
         },
@@ -124,7 +125,7 @@ var runningProcesses = {},
 module.exports = DynamoDbLocal;
 
 function installDynamoDbLocal() {
-    console.log('Checking for DynamoDB-Local in ', Config.installPath);
+    debug('Checking for DynamoDB-Local in ', Config.installPath);
     var filebuf = [];
     var deferred = Q.defer();
 
@@ -137,13 +138,13 @@ function installDynamoDbLocal() {
     } catch (e) {
     }
 
-    console.log('DynamoDb Local not installed. Installing...');
+    debug('DynamoDb Local not installed. Installing...');
 
     if (!fs.existsSync(Config.installPath))
         fs.mkdirSync(Config.installPath);
 
     if (fs.existsSync(Config.downloadUrl)) {
-        console.log('Installing from local file:', Config.downloadUrl);
+        debug('Installing from local file:', Config.downloadUrl);
         filebuf = fs.createReadStream(Config.downloadUrl);
         filebuf
             .pipe(zlib.Unzip())
