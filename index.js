@@ -8,8 +8,10 @@ var os = require('os'),
     zlib = require('zlib'),
     path = require('path'),
     mkdirp = require('mkdirp'),
-    Q = require('q'),
-    debug = require('debug')('dynamodb-local');
+    Q = require('q');
+
+var debugLib = require('debug');
+var debug = debugLib('dynamodb-local');
 
 var JARNAME = 'DynamoDBLocal.jar';
 
