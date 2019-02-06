@@ -161,7 +161,7 @@ function installDynamoDbLocal() {
             function (redirectResponse) {
                 if (200 != redirectResponse.statusCode) {
                     deferred.reject(new Error('Error getting DynamoDb local latest tar.gz location ' +
-                        response.headers['location'] + ': ' + redirectResponse.statusCode));
+                    redirectResponse.headers['location'] + ': ' + redirectResponse.statusCode));
                 }
                 redirectResponse
                     .pipe(zlib.Unzip())
