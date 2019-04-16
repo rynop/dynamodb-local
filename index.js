@@ -148,7 +148,7 @@ function installDynamoDbLocal() {
         filebuf = fs.createReadStream(Config.downloadUrl);
         filebuf
             .pipe(zlib.Unzip())
-            .pipe(tar.Extract({path: Config.installPath}))
+            .pipe(tar.extract({cwd: Config.installPath}))
             .on('end', function () {
                 deferred.resolve();
             })
@@ -165,7 +165,7 @@ function installDynamoDbLocal() {
                 }
                 redirectResponse
                     .pipe(zlib.Unzip())
-                    .pipe(tar.Extract({path: Config.installPath}))
+                    .pipe(tar.extract({cwd: Config.installPath}))
                     .on('end', function () {
                         deferred.resolve();
                     })
