@@ -29,7 +29,7 @@ var runningProcesses = {},
          * @param detached
          * @returns {Promise.<ChildProcess>}
          */
-        launch: function (port, dbPath, additionalArgs, verbose = false, detached) {
+        launch: function (port, dbPath, additionalArgs, verbose = false, detached, javaOpts = '') {
             if (runningProcesses[port]) {
                 return Q.fcall(function () {
                     return runningProcesses[port];
@@ -55,6 +55,7 @@ var runningProcesses = {},
                     var args = [
                         '-Xrs',
                         '-Djava.library.path=./DynamoDBLocal_lib',
+                        javaOpts,
                         '-jar',
                         JARNAME,
                         '-port',
