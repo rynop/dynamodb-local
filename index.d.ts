@@ -8,5 +8,5 @@ export interface InstallerConfig {
 }
 
 export function configureInstaller(config: InstallerConfig): void;
-export function launch(portNumber: number, dbPath?: string | null, args?: argValues[], verbose?: boolean, detatched: any, javaOpts: string): Promise<ChildProcess>;
+export function launch(portNumber: number, dbPath?: string | null, args?: argValues[], verbose?: boolean, detatched?: any, javaOpts?: string): Promise<ChildProcess>;
 export function stop(portNumber: number): void;
