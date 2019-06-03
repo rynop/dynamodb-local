@@ -60,7 +60,7 @@ var runningProcesses = {},
                         JARNAME,
                         '-port',
                         port
-                    ];
+                    ].filter(arg => !!arg);
                     args = args.concat(additionalArgs);
 
                     var child = spawn('java', args, {
