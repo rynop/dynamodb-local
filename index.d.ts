@@ -3,8 +3,8 @@ import { ChildProcess } from 'child_process';
 type argValues = '-cors' | '-dbPath' | '-delayTransientStatuses' | '-help' | '-inMemory' | '-optimizeDbBeforeStartup' | '-port' | '-sharedDb';
 
 export interface InstallerConfig {
-  installPath: string;
-  downloadUrl: string;
+  installPath?: string;
+  downloadUrl?: string;
 }
 
 export function configureInstaller(config: InstallerConfig): void;
