@@ -2,6 +2,7 @@
 
 var os = require('os'),
     spawn = require('child_process').spawn,
+    isMainThread = require('worker_threads').isMainThread,
     fs = require('fs'),
     https = require('https'),
     tar = require('tar'),
@@ -66,7 +67,7 @@ var runningProcesses = {},
                     var child = spawn('java', args, {
                         cwd: Config.installPath,
                         env: process.env,
-                        stdio: ['pipe', 'pipe', process.stderr]
+                        stdio: isMainThread ? ['pipe', 'pipe', process.stderr] : "inherit"
                     });
 
                     if (!child.pid) throw new Error('Unable to launch DynamoDBLocal process');
