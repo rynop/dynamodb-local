@@ -66,7 +66,7 @@ var runningProcesses = {},
                     var child = spawn('java', args, {
                         cwd: Config.installPath,
                         env: process.env,
-                        stdio: ['pipe', 'pipe', process.stderr]
+                        stdio: ['ignore', 'ignore', 'inherit']
                     });
 
                     if (!child.pid) throw new Error('Unable to launch DynamoDBLocal process');
