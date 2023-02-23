@@ -109,9 +109,9 @@ var runningProcesses = {},
                 child.kill();
             }
         },
-        relaunch: function (port, db) {
+        relaunch: function (port, ...args) {
             this.stop(port);
-            this.launch(port, db);
+            this.launch(port, ...args);
         },
         configureInstaller: function (conf) {
             if (conf.installPath) {
