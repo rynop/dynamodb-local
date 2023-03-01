@@ -39,7 +39,7 @@ const child = await DynamoDbLocal.launch(dynamoLocalPort, null, [], false, true)
 
 // do your tests
 
-await DynamoDbLocal.stopChild(child); // must be wrapped in async function
+DynamoDbLocal.stopChild(child);
 
 ```
 
