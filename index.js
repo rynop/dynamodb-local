@@ -10,6 +10,7 @@ var os = require('os'),
     debug = require('debug')('dynamodb-local');
 
 var JARNAME = 'DynamoDBLocal.jar';
+var INSTALL_MARKER = '.dynamodb-local-install-complete';
 
 var Config = {
     installPath: path.join(os.tmpdir(), 'dynamodb-local'),
@@ -124,20 +125,48 @@ module.exports = DynamoDbLocal;
 function installDynamoDbLocal() {
     debug('Checking for DynamoDB-Local in ', Config.installPath);
 
+    var jarPath = path.join(Config.installPath, JARNAME);
+    var markerPath = path.join(Config.installPath, INSTALL_MARKER);
+
     try {
-        if (fs.existsSync(path.join(Config.installPath, JARNAME))) {
+        // Check for both the jar file AND the install marker to ensure
+        // the extraction completed successfully. This prevents issues
+        // when a previous download/extraction was interrupted.
+        if (fs.existsSync(jarPath) && fs.existsSync(markerPath)) {
             return Promise.resolve(true);
         }
     } catch (e) {
     }
 
-    debug('DynamoDb Local not installed. Installing...');
+    debug('DynamoDb Local not installed or incomplete. Installing...');
 
-    if (!fs.existsSync(Config.installPath))
-        fs.mkdirSync(Config.installPath);
+    // Clean up any incomplete installation
+    if (fs.existsSync(Config.installPath)) {
+        try {
+            fs.rmSync(Config.installPath, { recursive: true, force: true });
+        } catch (e) {
+            debug('Warning: could not clean up incomplete installation:', e.message);
+        }
+    }
+    fs.mkdirSync(Config.installPath, { recursive: true });
 
 
     return new Promise((resolve, reject) => {
+        function onExtractionComplete() {
+            // Verify the jar file exists before marking as complete
+            if (!fs.existsSync(jarPath)) {
+                return reject(new Error('Extraction completed but ' + JARNAME + ' not found'));
+            }
+            // Create marker file to indicate successful installation
+            try {
+                fs.writeFileSync(markerPath, 'Installation completed at ' + new Date().toISOString());
+                debug('DynamoDB Local installation completed successfully');
+                resolve();
+            } catch (e) {
+                reject(new Error('Failed to create installation marker: ' + e.message));
+            }
+        }
+
         let stream;
 
         if (fs.existsSync(Config.downloadUrl)) {
@@ -147,7 +176,7 @@ function installDynamoDbLocal() {
                 .pipe(zlib.Unzip())
                 .pipe(tar.extract({ cwd: Config.installPath }));
 
-            stream.on('end', () => resolve());
+            stream.on('end', onExtractionComplete);
             stream.on('error', err => reject(err));
         }
         else {
@@ -165,7 +194,7 @@ function installDynamoDbLocal() {
                 redirectResponse
                     .pipe(zlib.Unzip())
                     .pipe(tar.extract({ cwd: Config.installPath }))
-                    .on('end', () => resolve())
+                    .on('end', onExtractionComplete)
                     .on('error', err => reject(err));
             }).on('error', e => reject(e));
         }
